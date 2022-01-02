@@ -1,8 +1,10 @@
+import asyncio
 import os
+import sys
 import json
 import aiohttp
 import logging
-from vhc import VHC
+#from vhc import VHC
 
 VACCINES = {
     "Pfizer 1st Dose": {
@@ -193,12 +195,12 @@ class SDMPharmacy:
 async def main():
     async with aiohttp.ClientSession(headers=HEADERS) as session:
 
-        vhc = VHC(
-            base_url=os.environ.get("BASE_URL"),
-            api_key=os.environ.get("API_KEY"),
-            org_id=os.environ.get("VHC_ORG_SHOPPERS_DRUG_MART"),
-            session=session,
-        )
+        #vhc = VHC(
+        #    base_url=os.environ.get("BASE_URL"),
+        #    api_key=os.environ.get("API_KEY"),
+        #    org_id=os.environ.get("VHC_ORG_SHOPPERS_DRUG_MART"),
+        #    session=session,
+        #)
 
         # Generate a lookup of external ID to Shoppers Drug Mart pharmacy
         # As we see each pharmacy, add it to the lookup if it isn't yet there
@@ -224,10 +226,21 @@ async def main():
                 pharmacy.vaccine_type = vaccine_data["type"]
 
         for external_key, pharmacy in pharmacies.items():
-            await vhc.add_availability(
-                num_available=pharmacy.num_available,
-                num_total=pharmacy.num_total,
-                vaccine_type=pharmacy.vaccine_type,
-                location=pharmacy.to_location(),
-                external_key=pharmacy.external_key,
-            )
+            print(pharmacy.num_available)
+            print(pharmacy.num_total)
+            print(pharmacy.vaccine_type)
+            print(pharmacy.to_location())
+            print(pharmacy.external_key)
+            print("Done")
+            #await vhc.add_availability(
+            #    num_available=pharmacy.num_available,
+            #    num_total=pharmacy.num_total,
+            #    vaccine_type=pharmacy.vaccine_type,
+            #    location=pharmacy.to_location(),
+            #    external_key=pharmacy.external_key,
+            #)
+if __name__ == '__main__':
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 8 and sys.platform.startswith('win'):
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+    asyncio.run(main())
