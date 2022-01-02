@@ -77,7 +77,9 @@ async def main():
                 }
 
                 print(location_data)
+                print(body)
                 print(availability)
+                print("Done")
 
                 # await vhc.add_availability(
                 #     num_available=1 if availability else 0,
