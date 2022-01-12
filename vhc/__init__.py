@@ -1,4 +1,5 @@
 import logging
+from typing import List
 import aiohttp
 import datetime
 
@@ -65,6 +66,43 @@ class VHC:
             else:
                 logging.info(f'Unavailable - {vaccine_name: <11} - {location["name"]}')
 
+    async def __get_timeslots(self, vaccine_availability_id: str) -> List:
+        response = await self.session.get(
+            url=self.request_path(f'vaccine-availability/{vaccine_availability_id}/timeslots'),
+            headers={ 'Authorization': self.API_KEY }
+        )
+        if response.status == 200:
+            body = await response.json()
+            logging.info(f'Retrieved timeslots for {vaccine_availability_id}')
+            return body
+        else:
+            return []
+    
+    async def __delete_timeslots(self, vaccine_availability_id: str, timeslots: List) -> None:
+        for timeslot in timeslots:
+            timeslot_id = timeslot['id']
+            response = await self.session.delete(
+                url=self.request_path(f'vaccine-availability/{vaccine_availability_id}/timeslots/{timeslot_id}'),
+                headers={ 'Authorization': self.API_KEY }
+            )
+            if response.status == 200:
+                logging.info(f'Deleted timeslot {timeslot_id}')
+
+    async def add_timeslots(self, vaccine_availability_id: str, times: List) -> None:
+        # Get list of existing timeslots
+        timeslots = await self.__get_timeslots(vaccine_availability_id)
+        # Delete existing timeslots
+        await self.__delete_timeslots(vaccine_availability_id, timeslots)
+        # Add timeslots
+        for time in times:
+            response = await self.session.post(
+                url=self.request_path(f'vaccine-availability/{vaccine_availability_id}/timeslots'),
+                headers={ 'Authorization': self.API_KEY },
+                json = { 'time': time }
+            )
+
+            if response.status == 200:
+                logging.info(f'Added timeslot {time}')
 
     async def notify_discord(self, title, availabilities, discord_url):
         if not discord_url or len(availabilities) == 0:
